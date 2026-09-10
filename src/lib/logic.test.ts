@@ -27,13 +27,11 @@ function party(overrides: Partial<Party> = {}): Party {
 }
 
 function table(number: string, capacity: number, occupied = false): RestaurantTable {
+  const base: RestaurantTable = { id: `t${number}`, number, capacity };
+  if (!occupied) return base;
   return {
-    id: `t${number}`,
-    number,
-    capacity,
-    occupiedBy: occupied
-      ? { partyId: "p", name: "Smith", partySize: 3, seatedAt: "2026-01-01T18:00:00.000Z" }
-      : undefined,
+    ...base,
+    occupiedBy: { partyId: "p", name: "Smith", partySize: 3, seatedAt: "2026-01-01T18:00:00.000Z" },
   };
 }
 
