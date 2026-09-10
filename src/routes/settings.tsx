@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRestaurant } from "@/hooks/useRestaurant";
-import { Trash2 } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+import { Switch } from "@/components/ui/switch";
+import { Moon, Sun, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
@@ -33,6 +35,7 @@ function SettingsPage() {
   const [interval, setIntervalMinutes] = useState(String(settings.seatingIntervalMinutes));
   const [newNumber, setNewNumber] = useState("");
   const [newCapacity, setNewCapacity] = useState("4");
+  const { isDark, setTheme } = useTheme();
 
   useEffect(() => {
     setIntervalMinutes(String(settings.seatingIntervalMinutes));
@@ -46,6 +49,29 @@ function SettingsPage() {
     <div className="h-full overflow-y-auto p-5">
       <div className="mx-auto max-w-3xl space-y-6">
         <h1 className="font-display text-4xl tracking-tight text-foreground">Settings</h1>
+
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div>
+              <h2 className="font-display text-2xl tracking-tight text-foreground">Appearance</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {isDark ? "Dark theme — easier on the eyes at night." : "Light theme."} Saved on this
+                tablet.
+              </p>
+            </div>
+            <div className="ml-auto flex items-center gap-3">
+              <Sun className="size-5 text-muted-foreground" />
+              <Switch
+                id="dark-mode"
+                checked={isDark}
+                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                aria-label="Dark mode"
+              />
+              <Moon className="size-5 text-muted-foreground" />
+            </div>
+          </div>
+        </section>
+
 
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <h2 className="font-display text-2xl tracking-tight text-foreground">Seating interval</h2>
