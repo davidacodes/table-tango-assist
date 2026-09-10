@@ -1,10 +1,17 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from fastapi.testclient import TestClient
 
 from app.main import create_app
 
 
 def client() -> TestClient:
-    return TestClient(create_app())
+    temp_dir = TemporaryDirectory()
+    db_path = Path(temp_dir.name) / "test.db"
+    test_client = TestClient(create_app(f"sqlite:///{db_path}"))
+    test_client.temp_dir = temp_dir  # type: ignore[attr-defined]
+    return test_client
 
 
 def login(client: TestClient) -> dict[str, str]:

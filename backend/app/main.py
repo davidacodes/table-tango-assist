@@ -3,10 +3,15 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from .database import configure_database
 from .routers import auth, parties, settings, tables
+from .store import init_store
 
 
-def create_app() -> FastAPI:
+def create_app(database_url: str | None = None) -> FastAPI:
+    configure_database(database_url)
+    init_store()
+
     app = FastAPI(title="NextTable API", version="0.1.0")
     app.add_middleware(
         CORSMiddleware,

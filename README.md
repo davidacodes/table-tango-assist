@@ -46,3 +46,7 @@ npm run dev
 ```sh
 uv run uvicorn app.main:app --reload
 ```
+
+The backend uses SQLite by default at `backend/nexttable.db`. Set
+`NEXTTABLE_DATABASE_URL` to point the server at a different SQLAlchemy database
+URL.

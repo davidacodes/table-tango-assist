@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
 from ..auth import current_token
+from ..dependencies import get_store
 from ..models import (
     NewPartyInput,
     Party,
@@ -9,37 +10,49 @@ from ..models import (
     SetPartyStatusRequest,
     UpdatePartySizeRequest,
 )
-from ..store import store
+from ..store import RestaurantStore
 
 router = APIRouter(prefix="/parties", tags=["Parties"], dependencies=[Depends(current_token)])
 
 
 @router.get("", response_model=list[Party], operation_id="listParties")
-def list_parties() -> list[Party]:
+def list_parties(store: RestaurantStore = Depends(get_store)) -> list[Party]:
     return store.list_parties()
 
 
 @router.post("", response_model=Party, status_code=status.HTTP_201_CREATED, operation_id="addParty")
-def add_party(payload: NewPartyInput) -> Party:
+def add_party(payload: NewPartyInput, store: RestaurantStore = Depends(get_store)) -> Party:
     return store.add_party(payload)
 
 
 @router.patch("/{party_id}/size", response_model=Party, operation_id="updatePartySize")
-def update_party_size(party_id: str, payload: UpdatePartySizeRequest) -> Party:
+def update_party_size(
+    party_id: str,
+    payload: UpdatePartySizeRequest,
+    store: RestaurantStore = Depends(get_store),
+) -> Party:
     return store.update_party_size(party_id, payload.party_size)
 
 
 @router.post("/{party_id}/notify", response_model=Party, operation_id="notifyParty")
-def notify_party(party_id: str) -> Party:
+def notify_party(party_id: str, store: RestaurantStore = Depends(get_store)) -> Party:
     return store.notify_party(party_id)
 
 
 @router.patch("/{party_id}/status", response_model=Party, operation_id="setPartyStatus")
-def set_party_status(party_id: str, payload: SetPartyStatusRequest) -> Party:
+def set_party_status(
+    party_id: str,
+    payload: SetPartyStatusRequest,
+    store: RestaurantStore = Depends(get_store),
+) -> Party:
     return store.set_party_status(party_id, payload.status)
 
 
 @router.post("/{party_id}/seat", response_model=SeatPartyResponse, operation_id="seatParty")
-def seat_party(party_id: str, payload: SeatPartyRequest) -> SeatPartyResponse:
+def seat_party(
+    party_id: str,
+    payload: SeatPartyRequest,
+    store: RestaurantStore = Depends(get_store),
+) -> SeatPartyResponse:
     party, table = store.seat_party(party_id, payload.table_id)
     return SeatPartyResponse(party=party, table=table)
