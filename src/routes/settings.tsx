@@ -66,7 +66,6 @@ function SettingsPage() {
                 checked={isDark}
                 onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
                 aria-label="Dark mode"
-                className="h-7 w-12"
               />
               <Moon className="size-5 text-muted-foreground" />
             </div>
