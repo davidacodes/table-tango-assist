@@ -42,3 +42,7 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+```sh
+uv run uvicorn app.main:app --reload
+```
