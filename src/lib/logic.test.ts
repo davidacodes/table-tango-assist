@@ -68,8 +68,8 @@ describe("active list", () => {
     ];
     const result = activeParties(list);
     expect(result).toHaveLength(2);
-    expect(result[0].status).toBe("waiting");
-    expect(result[1].status).toBe("notified");
+    expect(result[0]!.status).toBe("waiting");
+    expect(result[1]!.status).toBe("notified");
   });
 
   it("treats closed statuses as inactive", () => {
@@ -133,7 +133,7 @@ describe("returning guest detection", () => {
   it("matches on digits only and de-duplicates by name", () => {
     const matches = findReturningGuests(history, "5551234567");
     expect(matches).toHaveLength(1);
-    expect(matches[0].name).toBe("John Smith");
+    expect(matches[0]!.name).toBe("John Smith");
   });
 
   it("ignores short or unknown numbers", () => {
