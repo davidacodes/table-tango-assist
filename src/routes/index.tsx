@@ -1,24 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { QuickEntryForm } from "@/components/QuickEntryForm";
+import { WaitlistPanel } from "@/components/WaitlistPanel";
+import { TablesPanel } from "@/components/TablesPanel";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Host Stand — NextTable Waitlist & Tables" },
+      {
+        name: "description",
+        content:
+          "Manage the restaurant waitlist and table status from one tablet screen: add parties, notify guests, and seat them at the best-fitting table.",
+      },
+      { property: "og:title", content: "Host Stand — NextTable Waitlist & Tables" },
+      {
+        property: "og:description",
+        content:
+          "Add parties, track estimated waits, notify guests, and seat them at the best-fitting table.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: HostStand,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function HostStand() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="grid h-full grid-cols-1 gap-5 p-5 lg:grid-cols-[1.15fr_1fr]">
+      <div className="flex min-h-0 flex-col gap-5">
+        <QuickEntryForm />
+        <WaitlistPanel />
+      </div>
+      <TablesPanel />
     </div>
   );
 }
