@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { getService } from "@/services";
 import type { NewPartyInput, Party, PartyStatus, RestaurantTable, Settings } from "@/lib/types";
 import { activeParties } from "@/lib/logic";
@@ -44,15 +52,17 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       const svc = getService();
-      setAuthed(await svc.isAuthenticated());
-      await refresh();
+      const authenticated = await svc.isAuthenticated();
+      setAuthed(authenticated);
+      if (authenticated) await refresh();
       setReady(true);
     })();
   }, [refresh]);
 
   const value = useMemo<RestaurantContextValue>(() => {
     const svc = getService();
-    const wrap = <A extends unknown[]>(fn: (...args: A) => Promise<unknown>) =>
+    const wrap =
+      <A extends unknown[]>(fn: (...args: A) => Promise<unknown>) =>
       async (...args: A) => {
         await fn(...args);
         await refresh();
