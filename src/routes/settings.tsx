@@ -35,6 +35,7 @@ function SettingsPage() {
   const [interval, setIntervalMinutes] = useState(String(settings.seatingIntervalMinutes));
   const [newNumber, setNewNumber] = useState("");
   const [newCapacity, setNewCapacity] = useState("4");
+  const { isDark, setTheme } = useTheme();
 
   useEffect(() => {
     setIntervalMinutes(String(settings.seatingIntervalMinutes));
