@@ -4,11 +4,11 @@ info:
   version: 0.1.0
   description: >
     Backend contract expected by the frontend RestaurantService. Authentication
-    uses one shared restaurant passcode and a server-managed session cookie.
+    uses one shared restaurant passcode and bearer tokens.
 servers:
   - url: /api
 security:
-  - sessionCookie: []
+  - bearerAuth: []
 tags:
   - name: Auth
   - name: Settings
@@ -30,16 +30,11 @@ paths:
               $ref: "#/components/schemas/LoginRequest"
       responses:
         "200":
-          description: Login attempt result. Successful logins set the session cookie.
-          headers:
-            Set-Cookie:
-              description: Session cookie returned when authenticated is true.
-              schema:
-                type: string
+          description: Login attempt result. Successful logins include a bearer token.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthStatus"
+                $ref: "#/components/schemas/LoginResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
   /auth/logout:
@@ -362,11 +357,11 @@ paths:
           $ref: "#/components/responses/NotFound"
 components:
   securitySchemes:
-    sessionCookie:
-      type: apiKey
-      in: cookie
-      name: nexttable.session
-      description: Server-managed session cookie created by POST /auth/login.
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Bearer token returned by POST /auth/login.
   parameters:
     PartyId:
       name: partyId
@@ -414,6 +409,24 @@ components:
       properties:
         authenticated:
           type: boolean
+    LoginResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - authenticated
+        - accessToken
+        - tokenType
+      properties:
+        authenticated:
+          type: boolean
+        accessToken:
+          type:
+            - string
+            - "null"
+          description: Bearer token when authenticated is true; null otherwise.
+        tokenType:
+          type: string
+          const: bearer
     LoginRequest:
       type: object
       additionalProperties: false

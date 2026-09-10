@@ -1,0 +1,1 @@
+"""NextTable FastAPI backend."""
