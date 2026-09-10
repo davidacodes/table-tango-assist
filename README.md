@@ -34,19 +34,81 @@ Key requirements:
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+You need:
+
+- Node.js and npm for the frontend
+- `uv` for the Python/FastAPI backend
+
+Install dependencies from the repository root:
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+make frontend-install
+make backend-sync
 ```
+
+Run the app with two terminal tabs from the repository root.
+
+Terminal 1:
 
 ```sh
-uv run uvicorn app.main:app --reload
+make backend
 ```
 
-The backend uses SQLite by default at `backend/nexttable.db`. Set
-`NEXTTABLE_DATABASE_URL` to point the server at a different SQLAlchemy database
-URL.
+Terminal 2:
+
+```sh
+make frontend
+```
+
+The backend runs at:
+
+```text
+http://127.0.0.1:8000
+```
+
+The frontend runs at the `Local:` URL printed by Vite. It is usually:
+
+```text
+http://127.0.0.1:8080
+```
+
+If port `8080` is already in use, Vite will print another local URL, such as
+`http://127.0.0.1:8081/`.
+
+The shared restaurant passcode is:
+
+```text
+1234
+```
+
+The frontend talks to the backend at:
+
+```text
+http://127.0.0.1:8000/api
+```
+
+To point the frontend at a different backend:
+
+```sh
+VITE_API_BASE_URL="http://your-backend-host/api" make frontend
+```
+
+The backend uses SQLite by default at `backend/nexttable.db`. To use a different
+database, set `NEXTTABLE_DATABASE_URL` to a SQLAlchemy database URL:
+
+```sh
+NEXTTABLE_DATABASE_URL="sqlite:///./my.db" make backend
+```
+
+Run tests:
+
+```sh
+make backend-test
+cd frontend && npm exec vitest run
+```
+
+Build the frontend:
+
+```sh
+make frontend-build
+```
