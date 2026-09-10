@@ -1,0 +1,623 @@
+openapi: 3.1.0
+info:
+  title: NextTable API
+  version: 0.1.0
+  description: >
+    Backend contract expected by the frontend RestaurantService. Authentication
+    uses one shared restaurant passcode and a server-managed session cookie.
+servers:
+  - url: /api
+security:
+  - sessionCookie: []
+tags:
+  - name: Auth
+  - name: Settings
+  - name: Parties
+  - name: Tables
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      operationId: login
+      summary: Log in with the shared restaurant passcode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login attempt result. Successful logins set the session cookie.
+          headers:
+            Set-Cookie:
+              description: Session cookie returned when authenticated is true.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthStatus"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      operationId: logout
+      summary: Clear the current restaurant session
+      responses:
+        "204":
+          description: Logged out successfully.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/session:
+    get:
+      tags:
+        - Auth
+      operationId: isAuthenticated
+      summary: Check whether the current request has an authenticated session
+      security: []
+      responses:
+        "200":
+          description: Current authentication status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthStatus"
+  /settings:
+    get:
+      tags:
+        - Settings
+      operationId: getSettings
+      summary: Get restaurant settings
+      responses:
+        "200":
+          description: Restaurant settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags:
+        - Settings
+      operationId: updateSettings
+      summary: Update restaurant settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsPatch"
+      responses:
+        "200":
+          description: Updated restaurant settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /parties:
+    get:
+      tags:
+        - Parties
+      operationId: listParties
+      summary: List all parties
+      description: Returns active and closed party records.
+      responses:
+        "200":
+          description: Party records.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Party"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags:
+        - Parties
+      operationId: addParty
+      summary: Add a party to the waitlist
+      description: >
+        The backend trims name and phone, sets status to waiting, assigns IDs
+        and timestamps, and locks the estimated wait at creation time.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewPartyInput"
+      responses:
+        "201":
+          description: Created party.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Party"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /parties/{partyId}/size:
+    patch:
+      tags:
+        - Parties
+      operationId: updatePartySize
+      summary: Update a party's size
+      description: Changing party size does not recalculate estimatedWaitMinutes.
+      parameters:
+        - $ref: "#/components/parameters/PartyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePartySizeRequest"
+      responses:
+        "200":
+          description: Updated party.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Party"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /parties/{partyId}/notify:
+    post:
+      tags:
+        - Parties
+      operationId: notifyParty
+      summary: Mark a party as notified
+      description: Sets status to notified and records notifiedAt.
+      parameters:
+        - $ref: "#/components/parameters/PartyId"
+      responses:
+        "200":
+          description: Notified party.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Party"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /parties/{partyId}/status:
+    patch:
+      tags:
+        - Parties
+      operationId: setPartyStatus
+      summary: Close a party as left or no-show
+      description: Sets status and records closedAt.
+      parameters:
+        - $ref: "#/components/parameters/PartyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetPartyStatusRequest"
+      responses:
+        "200":
+          description: Updated party.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Party"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /parties/{partyId}/seat:
+    post:
+      tags:
+        - Parties
+      operationId: seatParty
+      summary: Seat a party at a table
+      description: >
+        Sets the party to seated, records seatedAt and closedAt, and marks the
+        selected table as occupied by the party.
+      parameters:
+        - $ref: "#/components/parameters/PartyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeatPartyRequest"
+      responses:
+        "200":
+          description: Seated party and occupied table.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeatPartyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /tables:
+    get:
+      tags:
+        - Tables
+      operationId: listTables
+      summary: List restaurant tables
+      responses:
+        "200":
+          description: Restaurant tables.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RestaurantTable"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags:
+        - Tables
+      operationId: addTable
+      summary: Add a restaurant table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TableInput"
+      responses:
+        "201":
+          description: Created restaurant table.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantTable"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /tables/{tableId}:
+    patch:
+      tags:
+        - Tables
+      operationId: updateTable
+      summary: Update a restaurant table
+      parameters:
+        - $ref: "#/components/parameters/TableId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TablePatch"
+      responses:
+        "200":
+          description: Updated restaurant table.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantTable"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Tables
+      operationId: removeTable
+      summary: Remove a restaurant table
+      parameters:
+        - $ref: "#/components/parameters/TableId"
+      responses:
+        "204":
+          description: Removed successfully.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /tables/{tableId}/release:
+    post:
+      tags:
+        - Tables
+      operationId: releaseTable
+      summary: Mark an occupied table as available
+      parameters:
+        - $ref: "#/components/parameters/TableId"
+      responses:
+        "200":
+          description: Released restaurant table.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantTable"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: nexttable.session
+      description: Server-managed session cookie created by POST /auth/login.
+  parameters:
+    PartyId:
+      name: partyId
+      in: path
+      required: true
+      schema:
+        type: string
+    TableId:
+      name: tableId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: Invalid request body or invalid state transition.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Authentication is required.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Requested party or table was not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Request conflicts with current restaurant state.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    AuthStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - authenticated
+      properties:
+        authenticated:
+          type: boolean
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - passcode
+      properties:
+        passcode:
+          type: string
+          minLength: 1
+    Settings:
+      type: object
+      additionalProperties: false
+      required:
+        - seatingIntervalMinutes
+      properties:
+        seatingIntervalMinutes:
+          type: integer
+          minimum: 1
+          description: Default minutes multiplied by active parties ahead.
+    SettingsPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        seatingIntervalMinutes:
+          type: integer
+          minimum: 1
+    NewPartyInput:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - phone
+        - partySize
+        - arrivalTime
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+          minLength: 1
+        partySize:
+          type: integer
+          minimum: 1
+        arrivalTime:
+          type: string
+          format: date-time
+    Party:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - phone
+        - partySize
+        - arrivalTime
+        - estimatedWaitMinutes
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        partySize:
+          type: integer
+          minimum: 1
+        arrivalTime:
+          type: string
+          format: date-time
+        estimatedWaitMinutes:
+          type: integer
+          minimum: 0
+        status:
+          $ref: "#/components/schemas/PartyStatus"
+        notifiedAt:
+          type: string
+          format: date-time
+        seatedAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+        tableId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    PartyStatus:
+      type: string
+      enum:
+        - waiting
+        - notified
+        - seated
+        - left
+        - no-show
+    UpdatePartySizeRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - partySize
+      properties:
+        partySize:
+          type: integer
+          minimum: 1
+    SetPartyStatusRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - left
+            - no-show
+    SeatPartyRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - tableId
+      properties:
+        tableId:
+          type: string
+    SeatPartyResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - party
+        - table
+      properties:
+        party:
+          $ref: "#/components/schemas/Party"
+        table:
+          $ref: "#/components/schemas/RestaurantTable"
+    RestaurantTable:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - number
+        - capacity
+      properties:
+        id:
+          type: string
+        number:
+          type: string
+        capacity:
+          type: integer
+          minimum: 1
+        occupiedBy:
+          $ref: "#/components/schemas/TableOccupant"
+    TableOccupant:
+      type: object
+      additionalProperties: false
+      required:
+        - partyId
+        - name
+        - partySize
+        - seatedAt
+      properties:
+        partyId:
+          type: string
+        name:
+          type: string
+        partySize:
+          type: integer
+          minimum: 1
+        seatedAt:
+          type: string
+          format: date-time
+    TableInput:
+      type: object
+      additionalProperties: false
+      required:
+        - number
+        - capacity
+      properties:
+        number:
+          type: string
+          minLength: 1
+        capacity:
+          type: integer
+          minimum: 1
+    TablePatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        number:
+          type: string
+          minLength: 1
+        capacity:
+          type: integer
+          minimum: 1
+    Error:
+      type: object
+      additionalProperties: false
+      required:
+        - error
+      properties:
+        error:
+          type: string
