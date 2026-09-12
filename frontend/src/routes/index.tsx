@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { QuickEntryForm } from "@/components/QuickEntryForm";
-import { WaitlistPanel } from "@/components/WaitlistPanel";
-import { TablesPanel } from "@/components/TablesPanel";
+import { HostStand } from "@/components/HostStand";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,15 +22,3 @@ export const Route = createFileRoute("/")({
   }),
   component: HostStand,
 });
-
-function HostStand() {
-  return (
-    <div className="grid h-full grid-cols-1 gap-5 p-5 lg:grid-cols-[1.15fr_1fr]">
-      <div className="flex min-h-0 flex-col gap-5">
-        <QuickEntryForm />
-        <WaitlistPanel />
-      </div>
-      <TablesPanel />
-    </div>
-  );
-}
