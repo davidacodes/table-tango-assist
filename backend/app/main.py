@@ -1,14 +1,45 @@
+import os
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import FileResponse
 
 from .database import configure_database
 from .routers import auth, parties, settings, tables
 from .store import init_store
 
+STATIC_DIR_ENV = "NEXTTABLE_STATIC_DIR"
 
-def create_app(database_url: str | None = None) -> FastAPI:
+
+class FrontendStaticFiles(StaticFiles):
+    def __init__(self, directory: str | os.PathLike[str]):
+        self.index_path = Path(directory) / "index.html"
+        super().__init__(directory=directory, html=True)
+
+    async def get_response(self, path: str, scope: dict) -> FileResponse:
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code != 404:
+                raise
+            return FileResponse(self.index_path)
+
+
+def static_directory(path: str | os.PathLike[str] | None = None) -> Path | None:
+    configured = path or os.getenv(STATIC_DIR_ENV)
+    if not configured:
+        return None
+
+    directory = Path(configured)
+    return directory if (directory / "index.html").is_file() else None
+
+
+def create_app(database_url: str | None = None, static_dir: str | os.PathLike[str] | None = None) -> FastAPI:
     configure_database(database_url)
     init_store()
 
@@ -36,6 +67,10 @@ def create_app(database_url: str | None = None) -> FastAPI:
         else:
             content = {"error": str(exc.detail)}
         return JSONResponse(status_code=exc.status_code, content=content, headers=exc.headers)
+
+    frontend_dir = static_directory(static_dir)
+    if frontend_dir is not None:
+        app.mount("/", FrontendStaticFiles(frontend_dir), name="frontend")
 
     return app
 

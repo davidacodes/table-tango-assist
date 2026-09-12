@@ -1,4 +1,4 @@
-.PHONY: help backend backend-sync backend-test frontend frontend-install frontend-build
+.PHONY: help backend backend-sync backend-test frontend frontend-install frontend-build frontend-build-static
 
 help:
 	@printf "NextTable commands:\n"
@@ -8,6 +8,7 @@ help:
 	@printf "  make frontend         Run the frontend dev server on http://127.0.0.1:8080\n"
 	@printf "  make frontend-install Install frontend dependencies\n"
 	@printf "  make frontend-build   Build the frontend\n"
+	@printf "  make frontend-build-static Build the frontend for Python static serving\n"
 
 backend:
 	cd backend && uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
@@ -26,3 +27,6 @@ frontend-install:
 
 frontend-build:
 	cd frontend && npm run build
+
+frontend-build-static:
+	cd frontend && npm run build:static
