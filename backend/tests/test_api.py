@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 
 from fastapi.testclient import TestClient
 
-from app.main import create_app
+from app.factory import create_app
 
 
 def client() -> TestClient:

@@ -16,6 +16,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS app
 WORKDIR /app/backend
 
 ENV NEXTTABLE_STATIC_DIR=/app/frontend \
+    NEXTTABLE_DATABASE_URL=postgresql+psycopg://nexttable:nexttable@db:5432/nexttable \
     PATH="/app/backend/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from app.main import create_app
+from app.factory import create_app
 
 
 def test_static_frontend_serves_index_and_spa_fallback(tmp_path: Path):

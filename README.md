@@ -38,6 +38,7 @@ You need:
 
 - Node.js and npm for the frontend
 - `uv` for the Python/FastAPI backend
+- PostgreSQL for the backend database
 
 Install dependencies from the repository root:
 
@@ -47,6 +48,12 @@ make backend-sync
 ```
 
 Run the app with two terminal tabs from the repository root.
+
+First start Postgres:
+
+```sh
+docker compose up -d db
+```
 
 Terminal 1:
 
@@ -93,12 +100,29 @@ To point the frontend at a different backend:
 VITE_API_BASE_URL="http://your-backend-host/api" make frontend
 ```
 
-The backend uses SQLite by default at `backend/nexttable.db`. To use a different
-database, set `NEXTTABLE_DATABASE_URL` to a SQLAlchemy database URL:
+The backend uses Postgres. The default local database URL is:
+
+```text
+postgresql+psycopg://nexttable:nexttable@localhost:5432/nexttable
+```
+
+You can override it with `NEXTTABLE_DATABASE_URL`:
 
 ```sh
-NEXTTABLE_DATABASE_URL="sqlite:///./my.db" make backend
+NEXTTABLE_DATABASE_URL="postgresql+psycopg://user:password@host:5432/database" make backend
 ```
+
+`postgres://...` and `postgresql://...` URLs are accepted and normalized to the
+psycopg SQLAlchemy driver.
+
+To run the full production-style stack with Postgres and the backend-served
+frontend:
+
+```sh
+docker compose up --build
+```
+
+Then open `http://127.0.0.1:8000`.
 
 Run tests:
 
